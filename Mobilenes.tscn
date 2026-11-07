@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/mobilenes/mobilenes.gd" id="1_mobilenes"]
+
+[node name="Mobilenes" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mobilenes")
+
+[node name="Screen" type="SubViewportContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 256.0
+offset_bottom = 240.0
+texture_filter = 1
+stretch = true
+
+[node name="GameViewport" type="SubViewport" parent="Screen"]
+canvas_item_default_texture_filter = 0
+size = Vector2i(256, 240)
+render_target_update_mode = 4
+
+[node name="DropYourGameHere" type="Node2D" parent="Screen/GameViewport"]
+unique_name_in_owner = true
