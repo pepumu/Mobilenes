@@ -10,7 +10,7 @@ extends Control
 ##   * switch vibration on or off,
 ##   * press "Reset this skin" to go back to that skin's own basic setup.
 ##
-## You normally never open this file: Mobilenes creates the menu for you.
+## Mobilenes creates the menu for you.
 ##
 ## The file has three parts:  1. THE MENU   2. THE SETTINGS FILE (class Settings)   3. THE PULL HANDLE (class Handle)
 

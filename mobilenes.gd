@@ -14,8 +14,7 @@ extends Control
 ##
 ## Your game gets a screen of "Game Size" pixels (0,0 = the size in Project Settings > Display > Window).
 ## On a computer you see only the game. On a phone (or in a web page) the game is shown between an on-screen gamepad.
-## Mobilenes never talks to your game and never moves the window: it only PRESSES BUTTONS (the pad_* actions below).
-## Your game decides what each button means.
+## Mobilenes PRESSES BUTTONS (the pad_* actions below). Your game decides what each button means.
 ##
 ## This file has these parts, in this order:
 ##     1. SETTINGS         everything you can change in the Inspector
@@ -321,13 +320,13 @@ func _looks_like_phone() -> bool:
 # =================================================================================================================
 # 4. LAYOUT - putting the game and the pad where they belong
 # =================================================================================================================
-# Mobilenes never changes the WINDOW. It only decides how big the game is inside whatever space it has, and only
-# in whole numbers (1x, 2x, 3x ...) so every pixel stays perfect. On a computer the window is sized by Global.
+# Mobilenes decides how much room the game gets inside whatever space it has. The window itself belongs to the
+# Screen (screen/screen.gd).
 
 # ==============================
 # Mobilenes only decides how much room the game gets: it sizes the SubViewport (Screen) to the free area and puts
-# the game inside at 1:1 pixels. It does NOT zoom the game and does not know how big the game is - the game
-# looks at the size of the viewport it is shown in and zooms itself (see Game._fit_to_window).
+# the game inside at 1:1 pixels. The Screen looks at the size of the room it is given and zooms the picture by a
+# whole number (see screen/screen.gd).
 # ==============================
 func _relayout() -> void:
 	if _pad == null or _menu == null:
@@ -417,7 +416,7 @@ func _place_handle(mobile: bool, zoom: float) -> void:
 class Pad extends Control:
 	## Pad - draws the on-screen gamepad and turns touches into button presses.
 	##
-	## You normally never open this file: Mobilenes creates the pad for you.
+	## Mobilenes creates the pad for you.
 	##
 	## What it does, in plain words:
 	##   * Draws the pictures from the skin.
@@ -796,8 +795,8 @@ class Actions extends RefCounted:
 	##   pad_l3 pad_r3                           -> stick clicks
 	##   pad_rs_up/down/left/right               -> the right stick (the left stick is the direction cross)
 	## (A skin only SHOWS the buttons it has pictures for; a keyboard or real gamepad can use them all.)
-	## Your game does not have to use these names: Global (section INPUT ALIASES) turns each pad button into the
-	## game's own button name. Mobilenes itself never talks to the game.
+	## Your game does not have to use these names: ButtonBindings (the table PAD_TO_GAME in
+	## maingame/button_bindings.gd) turns each pad button into the game's own button name.
 	##
 	## Example inside a game script:
 	##   if Input.is_action_just_pressed("pad_a"):

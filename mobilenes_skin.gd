@@ -7,7 +7,7 @@ extends Resource
 ##   2. THE PIECES     one picture of the pad, and for buttons its touch area (class Piece)
 ##   3. THE LOADER     reads a skin FOLDER (its skin.ini and pictures) into a MobilenesSkin
 ##
-## You normally do NOT make skins by hand: make a folder with a skin.ini file (see skins/ascii).
+## To make a skin, make a folder with a skin.ini file (see skins/ascii).
 
 # =================================================================================================================
 # 1. THE SKIN
@@ -15,8 +15,7 @@ extends Resource
 ## A complete on-screen gamepad "look": the pictures, where every button is,
 ## and which keys they use.
 ##
-## You normally do NOT make these by hand. Make a skin FOLDER with a skin.ini
-## file instead (see mobilepad_skin.gd and the Famicube skin for an example).
+## It is made from a skin FOLDER with a skin.ini file (see skins/ascii for an example).
 
 @export var skin_name := "My skin"  # A name for the skin.
 
@@ -63,8 +62,7 @@ extends Resource
 class Piece extends Resource:
 	## One piece of a gamepad skin: a picture and, for buttons, a touch area.
 	##
-	## You normally do NOT edit these by hand - they are created from the
-	## skin.ini file of a skin folder (see mobilepad_skin.gd).
+	## They are created from the skin.ini file of a skin folder.
 	##
 	## All positions are measured in the "design space" of the skin. For the
 	## Famicube skin that is 512 wide and 240 tall: the game screen sits in the
