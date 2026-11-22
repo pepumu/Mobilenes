@@ -793,8 +793,8 @@ class Actions extends RefCounted:
 	##   pad_l3 pad_r3                           -> stick clicks
 	##   pad_rs_up/down/left/right               -> the right stick (the left stick is the direction cross)
 	## (A skin only SHOWS the buttons it has pictures for; a keyboard or real gamepad can use them all.)
-	## Your game does not have to use these names: ButtonBindings (the table PAD_TO_GAME in
-	## maingame/button_bindings.gd) turns each pad button into the game's own button name.
+	## Your game does not have to use these names: it can turn each pad button into its own button name with a
+	## table of its own, one line per button (for example pad_a -> attack).
 	##
 	## Example inside a game script:
 	##   if Input.is_action_just_pressed("pad_a"):

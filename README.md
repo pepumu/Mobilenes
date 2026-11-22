@@ -63,8 +63,8 @@ Mobilenes creates these buttons in the Input Map and presses them (keyboard, rea
 A skin only **draws** the buttons it has pictures for (the ascii skin draws the cross, A, B, Select and Start);
 a keyboard or real gamepad can use all of them.
 
-Your game does not need these names: AsciiTopper turns them into its own button names in one table, `PAD_TO_GAME`
-in `global.gd` (section INPUT ALIASES).
+Your game does not need these names: it can turn each pad button into its own button name with a table of its own,
+one line per button (for example `pad_a` -> `attack`).
 
 ## Settings you can change (select the Mobilenes node)
 
