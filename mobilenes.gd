@@ -307,13 +307,11 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _looks_like_phone() -> bool:
-	if OS.has_feature("mobile"):
+func _looks_like_phone() -> bool:  # True on a phone or tablet: an app on one, or a web page opened in the browser of one.
+	if OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios"):
 		return true
-	if OS.has_feature("web"):
-		var answer = JavaScriptBridge.eval(
-			"/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)) || matchMedia('(pointer: coarse)').matches")   # the browser says it is a phone or tablet, or its main pointer is a finger (also true when the phone browser is set to "Desktop site")
-		return answer == true
+	if OS.has_feature("web"):   # a tablet that says it is a computer (an iPad, a phone set to "Desktop site"): its main pointer is a finger
+		return JavaScriptBridge.eval("matchMedia('(pointer: coarse)').matches") == true
 	return false
 
 
