@@ -312,7 +312,7 @@ func _looks_like_phone() -> bool:
 		return true
 	if OS.has_feature("web"):
 		var answer = JavaScriptBridge.eval(
-			"/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))")
+			"/Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)) || matchMedia('(pointer: coarse)').matches")   # the browser says it is a phone or tablet, or its main pointer is a finger (also true when the phone browser is set to "Desktop site")
 		return answer == true
 	return false
 
