@@ -359,16 +359,36 @@ func _relayout() -> void:
 
 # ==============================
 # SIDES layout: the pad is drawn as big as the window height allows; whatever is left between the left and right
-# panels is the game's screen.
+# panels is the game's screen. The game then fits itself into that room; any empty width it leaves at its left and
+# right is measured and handed to the side panels, so the game's room ends up exactly as wide as its picture.
 # ==============================
-func _relayout_sides() -> void:
+func _relayout_sides() -> void:  # Lays out the sides, then gives the game's unused width to the panels.
+	_place_sides(0.0)
+	var gap := _game_side_gap()
+	if gap >= 1.0:
+		_place_sides(gap)
+	layout_changed.emit(true)
+
+
+func _game_side_gap() -> float:  # The empty width the game left at each side of its room (0 when it fills the room).
+	var view := get_game_viewport()
+	if view == null:
+		return 0.0
+	var t := view.global_canvas_transform
+	if t.x.y != 0.0 or t.y.x != 0.0 or t.x.x <= 0.0:   # a turned or mirrored picture is left as it is
+		return 0.0
+	return floorf(clampf(t.origin.x, 0.0, _screen.size.x / 4.0))  # never more than a quarter of the room per side
+
+
+func _place_sides(extra: float) -> void:  # Sizes both panels (each widened by `extra` pixels) and the game between them.
 	var left_w := skin.left_width
 	var right_w := skin.design_size.x - skin.right_start
 	var design_h := skin.design_size.y
 	var p := size.y / design_h                         # how big the pad pieces are drawn
 	p = minf(p, size.x * 0.4 / (left_w + right_w))     # the pad never takes more than 40% of the width
-	var left_px := floorf(left_w * p)
-	var right_px := floorf(right_w * p)
+	var left_px := floorf(left_w * p) + extra
+	var right_px := floorf(right_w * p) + extra
+	p = minf(size.y / design_h, minf(left_px / left_w, right_px / right_w))  # wider panels may draw the pad a bit bigger
 	_screen.position = Vector2(left_px, 0)
 	_screen.size = Vector2(maxf(size.x - left_px - right_px, 1.0), size.y)
 	var sides := [
@@ -394,7 +414,6 @@ func _relayout_sides() -> void:
 		pad.scale = Vector2(p, p)
 		pad.position = Vector2(x0 + side_w / 2.0 - (design_x0 + design_w / 2.0) * p, size.y / 2.0 - design_h / 2.0 * p)
 	_place_handle(true, maxf(p, 1.0))
-	layout_changed.emit(true)
 
 
 # ==============================
