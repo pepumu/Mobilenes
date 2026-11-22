@@ -81,6 +81,7 @@ const SKINS_DIRECTORY := "res://addons/mobilenes/skins"  # Where the skins that 
 var skin: MobilenesSkin  # The skin currently in use.
 
 var _background: ColorRect
+var _back_picture: TextureRect  # the skin's background picture, behind the game and the panels (phone layout only)
 var _pad: Pad                  # the whole pad - or, in the sides layout, the LEFT half
 var _pad_right: Pad            # sides layout only: the right half
 var _panel_left: SidePanel
@@ -124,6 +125,14 @@ func _ready() -> void:
 	_background.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_background)
 	move_child(_background, 0)
+	_back_picture = TextureRect.new()
+	_back_picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_back_picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_back_picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED  # fills the window, cut at the edges if needed
+	_back_picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_back_picture.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_back_picture)
+	move_child(_back_picture, 1)
 
 	# The on-screen gamepad. (Sides layout: two panels with a pad half on each.)
 	_panel_left = SidePanel.new()
@@ -135,7 +144,7 @@ func _ready() -> void:
 	_pad = _make_pad()
 	_pad_right = _make_pad()
 	for i in 4:                                        # behind the game screen: panels, then the two pad halves
-		move_child([_panel_left, _panel_right, _pad, _pad_right][i], 1 + i)
+		move_child([_panel_left, _panel_right, _pad, _pad_right][i], 2 + i)
 
 	if not set_skin_folder(skin_folder) and skin_folder != DEFAULT_SKIN_FOLDER:
 		push_warning("Mobilenes: could not use the skin '%s', using the default skin instead." % skin_folder)
@@ -330,6 +339,8 @@ func _relayout() -> void:
 	if _pad == null or _menu == null:
 		return
 	var mobile := is_mobile_layout()
+	_back_picture.texture = skin.screen_background
+	_back_picture.visible = mobile and skin.screen_background != null
 	if mobile and skin.sides:
 		_relayout_sides()
 		return
@@ -359,38 +370,40 @@ func _relayout() -> void:
 
 # ==============================
 # SIDES layout: the pad is drawn as big as the window height allows; whatever is left between the left and right
-# panels is the game's screen. The game then fits itself into that room; any empty width it leaves at its left and
-# right is measured and handed to the side panels, so the game's room ends up exactly as wide as its picture.
+# panels is the game's screen. The game then fits itself into that room; the empty space it leaves around its picture
+# is measured: the width goes to the side panels and the room shrinks to the picture's height, so the skin's
+# background picture shows above and below the game.
 # ==============================
-func _relayout_sides() -> void:  # Lays out the sides, then gives the game's unused width to the panels.
-	_place_sides(0.0)
-	var gap := _game_side_gap()
-	if gap >= 1.0:
+func _relayout_sides() -> void:  # Lays out the sides, then gives the game's unused space to the panels and the background.
+	_place_sides(Vector2.ZERO)
+	var gap := _game_gap()
+	if gap.x >= 1.0 or gap.y >= 1.0:
 		_place_sides(gap)
 	layout_changed.emit(true)
 
 
-func _game_side_gap() -> float:  # The empty width the game left at each side of its room (0 when it fills the room).
+func _game_gap() -> Vector2:  # The empty space the game left beside (x) and above (y) its picture (0 when it fills the room).
 	var view := get_game_viewport()
 	if view == null:
-		return 0.0
+		return Vector2.ZERO
 	var t := view.global_canvas_transform
 	if t.x.y != 0.0 or t.y.x != 0.0 or t.x.x <= 0.0:   # a turned or mirrored picture is left as it is
-		return 0.0
-	return floorf(clampf(t.origin.x, 0.0, _screen.size.x / 4.0))  # never more than a quarter of the room per side
+		return Vector2.ZERO
+	return Vector2(floorf(clampf(t.origin.x, 0.0, _screen.size.x / 4.0)),  # never more than a quarter of the room per side
+			floorf(clampf(t.origin.y, 0.0, _screen.size.y / 4.0)))
 
 
-func _place_sides(extra: float) -> void:  # Sizes both panels (each widened by `extra` pixels) and the game between them.
+func _place_sides(gap: Vector2) -> void:  # Sizes both panels (each widened by gap.x) and the game between them (gap.y shorter at top and bottom).
 	var left_w := skin.left_width
 	var right_w := skin.design_size.x - skin.right_start
 	var design_h := skin.design_size.y
 	var p := size.y / design_h                         # how big the pad pieces are drawn
 	p = minf(p, size.x * 0.4 / (left_w + right_w))     # the pad never takes more than 40% of the width
-	var left_px := floorf(left_w * p) + extra
-	var right_px := floorf(right_w * p) + extra
+	var left_px := floorf(left_w * p) + gap.x
+	var right_px := floorf(right_w * p) + gap.x
 	p = minf(size.y / design_h, minf(left_px / left_w, right_px / right_w))  # wider panels may draw the pad a bit bigger
-	_screen.position = Vector2(left_px, 0)
-	_screen.size = Vector2(maxf(size.x - left_px - right_px, 1.0), size.y)
+	_screen.position = Vector2(left_px, gap.y)
+	_screen.size = Vector2(maxf(size.x - left_px - right_px, 1.0), maxf(size.y - 2.0 * gap.y, 1.0))
 	var sides := [
 		[_panel_left, _pad, 0.0, left_px, left_w, 0.0, -INF, skin.left_width],
 		[_panel_right, _pad_right, size.x - right_px, right_px, right_w, skin.right_start, skin.right_start, INF],

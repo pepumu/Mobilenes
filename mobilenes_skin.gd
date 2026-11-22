@@ -52,6 +52,7 @@ extends Resource
 @export var sides := false
 @export var left_width := 128.0
 @export var right_start := 384.0
+@export var screen_background: Texture2D  # one picture drawn behind the game, filling the window (skin.ini: screen_background)
 @export var body: Texture2D  # The picture the two panels are cut from (the skin's background).
 
 
@@ -230,6 +231,8 @@ static func _read_skin_section(section: Dictionary, skin: MobilenesSkin,
 	skin.sides = String(values.get("layout", "")).strip_edges().to_lower() == "sides"
 	skin.left_width = _number(values, "left_width", skin.screen_rect.position.x, ini_path, line)
 	skin.right_start = _number(values, "right_start", skin.design_size.x - skin.left_width, ini_path, line)
+	if values.has("screen_background"):
+		skin.screen_background = _texture(folder, values["screen_background"], ini_path, line)
 	if values.has("preview"):
 		skin.preview = _texture(folder, values["preview"], ini_path, line)
 	if values.has("background"):
