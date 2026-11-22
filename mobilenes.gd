@@ -82,6 +82,7 @@ var skin: MobilenesSkin  # The skin currently in use.
 
 var _background: ColorRect
 var _back_picture: TextureRect  # the skin's background picture, behind the game and the panels (phone layout only)
+var _frame: NinePatchRect  # the skin's frame around the game's picture (sides layout only)
 var _pad: Pad                  # the whole pad - or, in the sides layout, the LEFT half
 var _pad_right: Pad            # sides layout only: the right half
 var _panel_left: SidePanel
@@ -155,6 +156,12 @@ func _ready() -> void:
 	_menu.box = self
 	_menu.closed.connect(_on_menu_closed)
 	add_child(_menu)
+	_frame = NinePatchRect.new()
+	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_frame.draw_center = false                         # only the border is drawn; the game shows through the middle
+	_frame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(_frame)
+	move_child(_frame, _screen.get_index() + 1)         # just above the game, below the menu
 	_handle = MobilenesMenu.Handle.new()
 	_handle.opened.connect(open_menu)
 	_handle.pulled.connect(_menu.peek)
@@ -341,6 +348,7 @@ func _relayout() -> void:
 	var mobile := is_mobile_layout()
 	_back_picture.texture = skin.screen_background
 	_back_picture.visible = mobile and skin.screen_background != null
+	_frame.visible = false                             # the sides layout shows it again when the skin has one
 	if mobile and skin.sides:
 		_relayout_sides()
 		return
@@ -399,11 +407,13 @@ func _place_sides(gap: Vector2) -> void:  # Sizes both panels (each widened by g
 	var design_h := skin.design_size.y
 	var p := size.y / design_h                         # how big the pad pieces are drawn
 	p = minf(p, size.x * 0.4 / (left_w + right_w))     # the pad never takes more than 40% of the width
-	var left_px := floorf(left_w * p) + gap.x
-	var right_px := floorf(right_w * p) + gap.x
+	var border := skin.screen_frame_patch * roundf(p) if skin.screen_frame != null else Vector4.ZERO  # frame thickness on screen: left, top, right, bottom
+	var left_px := floorf(left_w * p) + gap.x - border.x   # the panels make room for the frame
+	var right_px := floorf(right_w * p) + gap.x - border.z
+	_screen.position = Vector2(left_px + border.x, gap.y)
+	_screen.size = Vector2(maxf(size.x - left_px - right_px - border.x - border.z, 1.0), maxf(size.y - 2.0 * gap.y, 1.0))
+	_place_frame(border, roundf(p))
 	p = minf(size.y / design_h, minf(left_px / left_w, right_px / right_w))  # wider panels may draw the pad a bit bigger
-	_screen.position = Vector2(left_px, gap.y)
-	_screen.size = Vector2(maxf(size.x - left_px - right_px, 1.0), maxf(size.y - 2.0 * gap.y, 1.0))
 	var sides := [
 		[_panel_left, _pad, 0.0, left_px, left_w, 0.0, -INF, skin.left_width],
 		[_panel_right, _pad_right, size.x - right_px, right_px, right_w, skin.right_start, skin.right_start, INF],
@@ -427,6 +437,20 @@ func _place_sides(gap: Vector2) -> void:  # Sizes both panels (each widened by g
 		pad.scale = Vector2(p, p)
 		pad.position = Vector2(x0 + side_w / 2.0 - (design_x0 + design_w / 2.0) * p, size.y / 2.0 - design_h / 2.0 * p)
 	_place_handle(true, maxf(p, 1.0))
+
+
+func _place_frame(border: Vector4, zoom: float) -> void:  # Puts the skin's frame around the game's room, its picture pixels drawn `zoom` times bigger.
+	_frame.visible = skin.screen_frame != null
+	if not _frame.visible:
+		return
+	_frame.texture = skin.screen_frame
+	_frame.patch_margin_left = int(skin.screen_frame_patch.x)
+	_frame.patch_margin_top = int(skin.screen_frame_patch.y)
+	_frame.patch_margin_right = int(skin.screen_frame_patch.z)
+	_frame.patch_margin_bottom = int(skin.screen_frame_patch.w)
+	_frame.scale = Vector2(zoom, zoom)
+	_frame.position = _screen.position - Vector2(border.x, border.y)
+	_frame.size = (_screen.size + Vector2(border.x + border.z, border.y + border.w)) / zoom
 
 
 # ==============================

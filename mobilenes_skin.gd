@@ -53,6 +53,8 @@ extends Resource
 @export var left_width := 128.0
 @export var right_start := 384.0
 @export var screen_background: Texture2D  # one picture drawn behind the game, filling the window (skin.ini: screen_background)
+@export var screen_frame: Texture2D  # a frame drawn around the game's picture as a 9-patch (skin.ini: screen_frame)
+@export var screen_frame_patch := Vector4.ZERO  # its borders in picture pixels: left, top, right, bottom (skin.ini: screen_frame_patch)
 @export var body: Texture2D  # The picture the two panels are cut from (the skin's background).
 
 
@@ -233,6 +235,14 @@ static func _read_skin_section(section: Dictionary, skin: MobilenesSkin,
 	skin.right_start = _number(values, "right_start", skin.design_size.x - skin.left_width, ini_path, line)
 	if values.has("screen_background"):
 		skin.screen_background = _texture(folder, values["screen_background"], ini_path, line)
+	if values.has("screen_frame"):
+		skin.screen_frame = _texture(folder, values["screen_frame"], ini_path, line)
+		var borders := _split_list(values.get("screen_frame_patch", ""))
+		if borders.size() == 4:
+			skin.screen_frame_patch = Vector4(float(borders[0]), float(borders[1]), float(borders[2]), float(borders[3]))
+		else:
+			_warn(ini_path, line, "screen_frame_patch needs four numbers: left, top, right, bottom")
+			skin.screen_frame = null
 	if values.has("preview"):
 		skin.preview = _texture(folder, values["preview"], ini_path, line)
 	if values.has("background"):
