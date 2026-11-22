@@ -100,11 +100,25 @@ class Piece extends Resource:
 
 	@export var turbo := false  # If ON, holding this button repeats it quickly ("turbo" / autofire).
 
+	@export var draw_size := Vector2.ZERO  # size the picture is stretched to as a 9-patch (0,0 = the picture's own size)
+
+	@export var patch_margins := Vector4.ZERO  # 9-patch borders kept as drawn: left, top, right, bottom (picture pixels)
+
+	@export var legend: Texture2D  # small picture drawn on top of a button (the letters on a key, for example)
+
+	@export var legend_offset := Vector2.ZERO  # where the legend's top-left corner sits, from the button's top-left corner
+
+
+	func get_size() -> Vector2:  # The size the piece is drawn at: its 9-patch size, or else its picture's size.
+		if draw_size != Vector2.ZERO:
+			return draw_size
+		return texture.get_size() if texture != null else Vector2.ZERO
+
 
 	func get_touch_rect() -> Rect2:  # The touch area as a rectangle (used by the pad). You do not need to call this.
 		var rect_size := touch_size
-		if rect_size == Vector2.ZERO and texture != null:
-			rect_size = texture.get_size()
+		if rect_size == Vector2.ZERO:
+			rect_size = get_size()
 		return Rect2(position + touch_offset - rect_size / 2.0, rect_size)
 
 
@@ -266,6 +280,18 @@ static func _read_button(section: Dictionary, skin: MobilenesSkin,
 		piece.pressed_texture = _texture(folder, values["pressed_image"], ini_path, line)
 	piece.position = Vector2(_number(values, "x", 0.0, ini_path, line), _number(values, "y", 0.0, ini_path, line))
 	piece.turbo = _boolean(values, "turbo", false, ini_path, line)
+	if values.has("width") or values.has("height"):  # stretched as a 9-patch to this size
+		var own := piece.texture.get_size() if piece.texture != null else Vector2.ZERO
+		piece.draw_size = Vector2(_number(values, "width", own.x, ini_path, line), _number(values, "height", own.y, ini_path, line))
+	if values.has("patch"):
+		var borders := _split_list(values["patch"])
+		if borders.size() == 4:
+			piece.patch_margins = Vector4(float(borders[0]), float(borders[1]), float(borders[2]), float(borders[3]))
+		else:
+			_warn(ini_path, line, "patch needs four numbers: left, top, right, bottom")
+	if values.has("legend"):
+		piece.legend = _texture(folder, values["legend"], ini_path, line)
+		piece.legend_offset = Vector2(_number(values, "legend_x", 0.0, ini_path, line), _number(values, "legend_y", 0.0, ini_path, line))
 
 	if not _read_touch_area(piece, values, ini_path, line, "[button %s]" % button_name):
 		return
@@ -301,9 +327,7 @@ static func _read_dpad(section: Dictionary, skin: MobilenesSkin,
 # ==============================
 static func _read_touch_area(piece: Piece, values: Dictionary,
 		ini_path: String, line: int, where: String) -> bool:
-	var picture_size := Vector2.ZERO
-	if piece.texture != null:
-		picture_size = piece.texture.get_size()
+	var picture_size := piece.get_size()  # the 9-patch size when there is one, else the picture's own size
 	piece.touch_size = Vector2(
 		_number(values, "touch_width", picture_size.x, ini_path, line),
 		_number(values, "touch_height", picture_size.y, ini_path, line))

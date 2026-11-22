@@ -526,8 +526,14 @@ class Pad extends Control:
 					tex = piece.pressed_texture
 				else:
 					tint = Color(0.7, 0.7, 0.7)
-			var top_left := (piece.position - tex.get_size() / 2.0).round()
-			draw_texture(tex, top_left, tint)
+			var piece_size := piece.get_size()
+			var top_left := (piece.position - piece_size / 2.0).round()
+			if piece.draw_size != Vector2.ZERO:
+				_draw_nine_patch(tex, Rect2(top_left, piece_size), piece.patch_margins, tint)
+			else:
+				draw_texture(tex, top_left, tint)
+			if piece.legend != null:   # a pressed key's top sits one pixel lower, and its legend with it
+				draw_texture(piece.legend, top_left + piece.legend_offset + Vector2(0, 1 if is_down else 0))
 			if piece.kind == MobilenesSkin.Piece.Kind.DPAD:
 				_draw_dpad_highlight(top_left, tex.get_size())
 
@@ -537,6 +543,19 @@ class Pad extends Control:
 					var rect := piece.get_touch_rect()
 					draw_rect(rect, Color(0.0, 0.8, 0.9, 0.3))
 					draw_rect(rect, Color(0.0, 0.8, 0.9, 0.9), false, 1.0)
+
+
+	func _draw_nine_patch(tex: Texture2D, rect: Rect2, margins: Vector4, tint: Color) -> void:  # Stretches a picture to `rect`, keeping its four borders as drawn.
+		var source := [0.0, margins.x, tex.get_width() - margins.z, tex.get_width()]  # column edges in the picture
+		var source_y := [0.0, margins.y, tex.get_height() - margins.w, tex.get_height()]
+		var target := [rect.position.x, rect.position.x + margins.x, rect.end.x - margins.z, rect.end.x]  # column edges on the pad
+		var target_y := [rect.position.y, rect.position.y + margins.y, rect.end.y - margins.w, rect.end.y]
+		for column in 3:
+			for row in 3:
+				var to := Rect2(target[column], target_y[row], target[column + 1] - target[column], target_y[row + 1] - target_y[row])
+				var from := Rect2(source[column], source_y[row], source[column + 1] - source[column], source_y[row + 1] - source_y[row])
+				if to.size.x > 0.0 and to.size.y > 0.0 and from.size.x > 0.0 and from.size.y > 0.0:
+					draw_texture_rect_region(tex, to, from, tint)
 
 
 	func _mine(piece: MobilenesSkin.Piece) -> bool:
