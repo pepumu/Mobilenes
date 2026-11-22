@@ -88,3 +88,7 @@ Mistakes in `skin.ini` never crash the game: they show up as yellow warnings in 
 * Vibration works on Android (apps and Chrome web builds). iPhones do not allow web vibration.
 * Pixels are only perfect at 1x and up. On a canvas smaller than the game plus its pad (1280 x 400 with the default
   side ratio) the game has to be drawn smaller than 1x, which cannot be perfect.
+
+## Licence
+
+MIT (see `LICENSE`): the code and the pictures of the skins that come with it.
